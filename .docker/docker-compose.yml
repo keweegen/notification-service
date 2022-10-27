@@ -1,0 +1,31 @@
+version: '3.18'
+
+networks:
+  app-tier:
+    name: ${SERVICE_NAME}
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:15-alpine3.16
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - ${DOCKER_STORAGE}/postgresql:/var/lib/postgresql/data
+    networks:
+      - app-tier
+
+  redis:
+    image: bitnami/redis:7.0.5
+    restart: always
+    environment:
+      REDIS_PASSWORD: ${MESSAGE_BROKER_PASSWORD}
+    ports:
+      - ${MESSAGE_BROKER_PORT}:6379
+    networks:
+      - app-tier

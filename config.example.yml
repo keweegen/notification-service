@@ -1,0 +1,22 @@
+database:
+  host: 127.0.0.1
+  port: 5432
+  name: notification
+  user: notification_app
+  password: strongpassword
+
+messageBroker:
+  password: strongpassword
+  addr:
+    - 127.0.0.1:6379
+
+notificationChannels:
+  telegram:
+    host: api.telegram.org
+    apiKey:
+  email:
+    host: smtp.mailtrap.io
+    port: 2525
+    from: no-reply@keweegen.github.io
+    username:
+    password:

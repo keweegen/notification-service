@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  title: Notification service
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:3000'
+    description: Local server
+
+paths:
+  /message/generate-id:
+    post:
+      tags:
+        - Message
+      operationId: generateMessageId
+      summary: Generate message id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateMessageIdRequest'
+      responses:
+        200:
+          description: Successfully generated id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateMessageIdResponse'
+
+  /message/{messageId}/send:
+    post:
+      tags:
+        - Message
+      operationId: sendMessage
+      summary: Send message
+      parameters:
+        - $ref: '#/components/parameters/messageIdParam'
+      responses:
+        200:
+          description: Message delivered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /message/{messageId}/status:
+    get:
+      tags:
+        - Message
+      operationId: getMessageStatus
+      summary: Get message status
+      parameters:
+        - $ref: '#/components/parameters/messageIdParam'
+      responses:
+        200:
+          description: Message delivered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+tags:
+  - name: Message
+
+components:
+  parameters:
+    messageIdParam:
+      name: messageId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: "NS-{channelId}-{messageTemplateId}-{userId}-{timestamp}-{externalId}"
+        example: "NS-002-001-1234567890-1666030721-1234567890"
+
+  schemas:
+    GenerateMessageIdRequest:
+      type: object
+      properties:
+        channel:
+          type: string
+          required: true
+          enum:
+            - telegram
+            - email
+          example: email
+        userId:
+          type: integer
+          format: int64
+          required: true
+          example: 1234567890
+        externalId:
+          type: integer
+          format: int64
+          required: true
+          example: 1234567890
+        messageTemplate:
+          type: string
+          required: true
+          enum:
+            - receipt
+        timestamp:
+          type: integer
+          format: int64
+          example: 1666030721
+    GenerateMessageIdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          required: true
+          format: "NS-{channelId}-{messageTemplateId}-{userId}-{timestamp}-{externalId}"
+          example: "NS-002-001-1234567890-1666030721-1234567890"
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          required: true
+          format: "NS-{channelId}-{messageTemplateId}-{userId}-{timestamp}-{externalId}"
+          example: "NS-002-001-1234567890-1666030721-1234567890"
+        status:
+          type: string
+          required: true
+          enum:
+            - new
+            - sending
+            - delivered
+            - failed
+          example: "delivered"
+        statusDescription:
+          type: string
+          required: true
+          example: "Message delivered"
+        statusTime:
+          type: string
+          format: datetime
+          required: true
