@@ -7,6 +7,7 @@ package mock_repository
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 	entity "github.com/keweegen/notification/internal/entity"
@@ -122,6 +123,21 @@ func (m *MockMessage) FindLastStatus(ctx context.Context, messageID string) (*en
 func (mr *MockMessageMockRecorder) FindLastStatus(ctx, messageID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastStatus", reflect.TypeOf((*MockMessage)(nil).FindLastStatus), ctx, messageID)
+}
+
+// FindProcessMessages mocks base method.
+func (m *MockMessage) FindProcessMessages(ctx context.Context, dateFrom, dateTo time.Time) (entity.Messages, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindProcessMessages", ctx, dateFrom, dateTo)
+	ret0, _ := ret[0].(entity.Messages)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindProcessMessages indicates an expected call of FindProcessMessages.
+func (mr *MockMessageMockRecorder) FindProcessMessages(ctx, dateFrom, dateTo interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindProcessMessages", reflect.TypeOf((*MockMessage)(nil).FindProcessMessages), ctx, dateFrom, dateTo)
 }
 
 // Publish mocks base method.

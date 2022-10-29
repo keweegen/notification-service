@@ -480,6 +480,7 @@ func TestMessage_makeStatus(t *testing.T) {
 
 	l := mock_logger.NewMockLogger(controller)
 	l.EXPECT().With("service", "message").Return(l)
+	l.EXPECT().With("service", "messageChecker").Return(l)
 
 	repoMessage := mock_repository.NewMockMessage(controller)
 	repoUser := mock_repository.NewMockUser(controller)
@@ -605,6 +606,7 @@ func TestMessage_appendQueueChannelMessage(t *testing.T) {
 
 	l := mock_logger.NewMockLogger(controller)
 	l.EXPECT().With("service", "message").Return(l)
+	l.EXPECT().With("service", "messageChecker").Return(l)
 
 	repoMessage := mock_repository.NewMockMessage(controller)
 	repoUser := mock_repository.NewMockUser(controller)
