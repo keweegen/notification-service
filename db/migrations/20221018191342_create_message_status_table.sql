@@ -6,10 +6,11 @@ CREATE TABLE IF NOT EXISTS message_status
     message_id  varchar(255) NOT NULL REFERENCES message (id),
     status      varchar(255) NOT NULL,
     description varchar(255) NOT NULL,
+    is_last     bool         NOT NULL DEFAULT false,
     created_at  timestamptz  NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_message_status_status ON message_status (status);
+CREATE INDEX idx_message_status_status_created_at ON message_status (status, created_at);
 -- +goose StatementEnd
 
 -- +goose Down

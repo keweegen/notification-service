@@ -256,7 +256,7 @@ func (m *Message) handleChannelMessages(ctx context.Context, quit <-chan struct{
 			return
 		default:
 			messageID := <-m.chQueueChannels[channel]
-			l := m.logger.With("messageId", messageID)
+			l := m.logger.With("messageId", messageID, "channel", channel)
 
 			message, err := m.repoStore.Message.Find(ctx, messageID)
 			if err != nil {
@@ -265,47 +265,42 @@ func (m *Message) handleChannelMessages(ctx context.Context, quit <-chan struct{
 				continue
 			}
 
-			m.makeStatus(ctx, message.ID, entity.MessageStatusSending, "Sending a message")
-
-			channelDriver, err := m.channelStore.Get(channel)
-			if err != nil {
-				l.Error("get channel driver by name", "error", err)
-				m.makeStatus(ctx, message.ID, entity.MessageStatusFailed, err.Error())
-				continue
+			if err = m.sendMessage(ctx, message); err != nil {
+				l.Error("failed send message", "error", err)
 			}
-
-			userChannelSettings, err := m.repoStore.User.FindByChannel(ctx, message.UserID, message.Channel)
-			if err != nil {
-				l.Error("find user notification channel",
-					"userId", message.UserID,
-					"channel", message.Channel,
-					"error", err)
-				m.makeStatus(ctx, message.ID, entity.MessageStatusFailed, err.Error())
-				continue
-			}
-
-			if !userChannelSettings.CanNotify {
-				l.Error("can not notify", "userId", message.UserID, "channel", message.Channel)
-				m.makeStatus(ctx, message.ID, entity.MessageStatusFailed, "CanNotify is false")
-				continue
-			}
-
-			content, err := m.getContentFromTemplate(message)
-			if err != nil {
-				l.Error("get content from template", "error", err)
-				m.makeStatus(ctx, message.ID, entity.MessageStatusFailed, err.Error())
-				continue
-			}
-
-			if err = channelDriver.Send(userChannelSettings.Recipient, content); err != nil {
-				l.Error("send message with channel driver", "channel", message.Channel, "error", err)
-				m.makeStatus(ctx, message.ID, entity.MessageStatusFailed, err.Error())
-				continue
-			}
-
-			m.makeStatus(ctx, message.ID, entity.MessageStatusSent, "Message sent")
 		}
 	}
+}
+
+func (m *Message) sendMessage(ctx context.Context, message *entity.Message) error {
+	m.logger.Debug("sending message")
+	m.makeStatus(ctx, message.ID, entity.MessageStatusSending, "Sending a message")
+
+	channelDriver, err := m.channelStore.Get(message.Channel)
+	if err != nil {
+		return fmt.Errorf("get channel driver by name: %w", err)
+	}
+
+	userChannelSettings, err := m.repoStore.User.FindByChannel(ctx, message.UserID, message.Channel)
+	if err != nil {
+		return fmt.Errorf("find user notification channel: %w", err)
+	}
+	if !userChannelSettings.CanNotify {
+		return errors.New("CanNotify is false")
+	}
+
+	content, err := m.getContentFromTemplate(message)
+	if err != nil {
+		return fmt.Errorf("get content from template")
+	}
+	if err = channelDriver.Send(userChannelSettings.Recipient, content); err != nil {
+		return fmt.Errorf("send message with channel driver: %w", err)
+	}
+
+	m.makeStatus(ctx, message.ID, entity.MessageStatusSent, "Message sent")
+	m.logger.Debug("message sent", "channel", message.Channel, "content", content)
+
+	return nil
 }
 
 func (m *Message) makeStatus(ctx context.Context, messageID, status, description string) {
@@ -319,7 +314,7 @@ func (m *Message) makeStatus(ctx context.Context, messageID, status, description
 }
 
 func (m *Message) pubSubKey(channel channel.Channel) string {
-	return fmt.Sprintf("ns::%s", channel.String())
+	return fmt.Sprintf("ns::%d", channel)
 }
 
 func (m *Message) getContentFromTemplate(message *entity.Message) (string, error) {

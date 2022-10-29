@@ -20,8 +20,10 @@ type Message interface {
 	CreateStatus(ctx context.Context, messageID, status, description string) error
 	Find(ctx context.Context, messageID string) (*entity.Message, error)
 	FindLastStatus(ctx context.Context, messageID string) (*entity.MessageStatus, error)
+	FindProcessMessages(ctx context.Context, dateFrom, dateTo time.Time) (entity.Messages, error)
 	Exists(ctx context.Context, messageID string) (bool, error)
 	CheckForDuplicates(ctx context.Context, message *entity.Message) (string, error)
+
 	Publish(ctx context.Context, key string, messageID string) error
 	Subscribe(ctx context.Context, keys ...string) *MessageSubscription
 }
@@ -46,12 +48,21 @@ func (r *messageRepository) Create(ctx context.Context, message *entity.Message)
 }
 
 func (r *messageRepository) CreateStatus(ctx context.Context, messageID, status, description string) error {
+	_, err := models.MessageStatuses(
+		models.MessageStatusWhere.MessageID.EQ(messageID),
+		models.MessageStatusWhere.IsLast.EQ(true),
+	).UpdateAll(ctx, r.db, models.M{models.MessageStatusColumns.IsLast: false})
+	if err != nil {
+		return fmt.Errorf("failed to update is_last: %w", err)
+	}
+
 	model := new(models.MessageStatus)
 	model.MessageID = messageID
 	model.Status = status
 	model.Description = description
+	model.IsLast = true
 
-	if err := model.Insert(ctx, r.db, boil.Infer()); err != nil {
+	if err = model.Insert(ctx, r.db, boil.Infer()); err != nil {
 		return fmt.Errorf("failed to create message status: %w", err)
 	}
 
@@ -75,6 +86,34 @@ func (r *messageRepository) FindLastStatus(ctx context.Context, messageID string
 		return nil, fmt.Errorf("failed to find last status message: %w", err)
 	}
 	return r.sqlboilerToEntityMessageStatus(model), nil
+}
+
+func (r *messageRepository) FindProcessMessages(ctx context.Context, dateFrom, dateTo time.Time) (entity.Messages, error) {
+	subQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s.%s IN (?, ?) AND %s.%s=? AND (%s.%s BETWEEN ? AND ?)",
+		models.TableNames.MessageStatus,
+		models.TableNames.MessageStatus,
+		models.MessageStatusColumns.Status,
+		models.TableNames.MessageStatus,
+		models.MessageStatusColumns.IsLast,
+		models.TableNames.MessageStatus,
+		models.MessageStatusColumns.CreatedAt)
+
+	query := []qm.QueryMod{
+		qm.Where(fmt.Sprintf("(%s) > 0", subQuery), // end sprintf
+			entity.MessageStatusNew, // query args
+			entity.MessageStatusSending,
+			true,
+			dateFrom,
+			dateTo),
+		qm.Limit(1000),
+	}
+
+	messages, err := models.Messages(query...).All(ctx, r.db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find sending messages: %w", err)
+	}
+
+	return r.sqlboilerToEntityMessages(messages), nil
 }
 
 func (r *messageRepository) Exists(ctx context.Context, messageID string) (bool, error) {
@@ -132,6 +171,16 @@ func (r *messageRepository) sqlboilerToEntityMessage(data *models.Message) *enti
 		Timestamp:       data.Timestamp.UnixMilli(),
 		Params:          data.Params,
 	}
+}
+
+func (r *messageRepository) sqlboilerToEntityMessages(data models.MessageSlice) entity.Messages {
+	messages := make(entity.Messages, 0, len(data))
+
+	for _, m := range data {
+		messages = append(messages, r.sqlboilerToEntityMessage(m))
+	}
+
+	return messages
 }
 
 func (r *messageRepository) entityMessageStatusToSqlboiler(data *entity.MessageStatus) *models.MessageStatus {

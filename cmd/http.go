@@ -22,6 +22,7 @@ func init() {
 var httpServerCommand = &cobra.Command{
 	Use: "http",
 	RunE: func(_ *cobra.Command, _ []string) error {
+		ctx := context.Background()
 		s := shutdown.New(l)
 		s.Listen()
 
@@ -41,7 +42,8 @@ var httpServerCommand = &cobra.Command{
 		channelStore := channel.NewStore(cfg.NotificationChannels)
 		serviceStore := service.NewStore(l, repositoryStore, channelStore)
 
-		go serviceStore.Message.HandleMessages(context.Background(), quit)
+		go serviceStore.Message.HandleMessages(ctx, quit)
+		go serviceStore.MessageChecker.Do(ctx, quit)
 
 		httpServer := http.NewServer(serviceStore)
 		s.AddHandler("close http server connection", httpServer.Close)
