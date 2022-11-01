@@ -1,35 +1,36 @@
 package channel
 
 import (
-    "errors"
-    "github.com/keweegen/notification/config"
-    "github.com/keweegen/notification/internal/channel/email"
-    "github.com/keweegen/notification/internal/channel/telegram"
+	"errors"
+	"github.com/keweegen/notification/config"
+	"github.com/keweegen/notification/internal/channel/email"
+	"github.com/keweegen/notification/internal/channel/telegram"
 )
 
 var (
-    DriverNotFoundErr = errors.New("channel driver not found")
+	DriverNotFoundErr = errors.New("channel driver not found")
 )
 
+//go:generate mockgen -source=driver.go -destination=./mock/driver.go
 type Driver interface {
-    Send(receiver, message string) error
+	Send(receiver, message string) error
 }
 
 type Store struct {
-    drivers map[Channel]Driver
+	Drivers map[Channel]Driver
 }
 
 func NewStore(cfg config.NotificationChannels) *Store {
-    return &Store{drivers: map[Channel]Driver{
-        Telegram: telegram.New(cfg.Telegram),
-        Email:    email.New(cfg.Email),
-    }}
+	return &Store{Drivers: map[Channel]Driver{
+		Telegram: telegram.New(cfg.Telegram),
+		Email:    email.New(cfg.Email),
+	}}
 }
 
 func (s *Store) Get(channel Channel) (Driver, error) {
-    driver, ok := s.drivers[channel]
-    if !ok {
-        return nil, DriverNotFoundErr
-    }
-    return driver, nil
+	driver, ok := s.Drivers[channel]
+	if !ok {
+		return nil, DriverNotFoundErr
+	}
+	return driver, nil
 }

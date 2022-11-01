@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	retryTimeoutChecker        = 10 * time.Minute
-	retryTimeoutCheckerOnError = time.Minute
+	retryTimeoutChecker = 10 * time.Minute
 )
 
 type MessageChecker struct {
@@ -29,23 +28,28 @@ func NewMessageChecker(logger logger.Logger, repo *repository.Store, messageServ
 }
 
 func (mc *MessageChecker) Do(ctx context.Context, quit <-chan struct{}) {
+	mc.check(ctx)
+
 	for {
 		select {
 		case <-quit:
 			return
 		case <-time.After(retryTimeoutChecker):
-			mc.logger.Debug("get process messages")
-
-			processMessages, err := mc.getProcessMessages(ctx)
-			if err != nil {
-				mc.logger.Error("failed to get process messages", "error", err)
-				time.Sleep(retryTimeoutCheckerOnError)
-				continue
-			}
-
-			mc.resendMessages(ctx, processMessages)
+			mc.check(ctx)
 		}
 	}
+}
+
+func (mc *MessageChecker) check(ctx context.Context) {
+	mc.logger.Debug("get process messages")
+
+	processMessages, err := mc.getProcessMessages(ctx)
+	if err != nil {
+		mc.logger.Error("failed to get process messages", "error", err)
+		return
+	}
+
+	mc.resendMessages(ctx, processMessages)
 }
 
 func (mc *MessageChecker) resendMessages(ctx context.Context, messages entity.Messages) {

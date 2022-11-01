@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source=message.go -destination=./mock/message.go
 type Message interface {
 	Create(ctx context.Context, message *entity.Message) error
 	CreateStatus(ctx context.Context, messageID, status, description string) error

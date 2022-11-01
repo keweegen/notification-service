@@ -29,14 +29,9 @@ Run Go service
 make http-server
 ```
 ---
-Generate models (sqlboiler psql)
+Generate mocks (gomock) / models (sqlboiler)
 ```
-make gen-models
-```
----
-Generate mocks (mockgen ...)
-```
-make gen-mock
+make generate
 ```
 ---
 Run tests (go test -v ./...)
@@ -52,4 +47,4 @@ make coverage
 ## ⭐ TODO
 - [ ] Add API endpoints to create/update user info
 - [ ] Add [Jaeger](https://www.jaegertracing.io/)
-- [ ] Handling unsuccessfully sent messages
+- [x] Handling unsuccessfully sent messages

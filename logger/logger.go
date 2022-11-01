@@ -2,6 +2,7 @@ package logger
 
 import "go.uber.org/zap"
 
+//go:generate mockgen -source=logger.go -destination=./mock/logger.go
 type Logger interface {
 	With(args ...any) Logger
 	Debug(msg string, args ...any)

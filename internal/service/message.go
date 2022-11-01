@@ -267,6 +267,7 @@ func (m *Message) handleChannelMessages(ctx context.Context, quit <-chan struct{
 
 			if err = m.sendMessage(ctx, message); err != nil {
 				l.Error("failed send message", "error", err)
+				m.makeStatus(ctx, message.ID, entity.MessageStatusFailed, err.Error())
 			}
 		}
 	}

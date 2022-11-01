@@ -6,29 +6,24 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang/mock/gomock"
-	"github.com/keweegen/notification/config"
 	"github.com/keweegen/notification/internal/channel"
 	"github.com/keweegen/notification/internal/entity"
 	"github.com/keweegen/notification/internal/messagetemplate"
 	"github.com/keweegen/notification/internal/repository"
-	mock_repository "github.com/keweegen/notification/internal/repository/mock"
-	"github.com/keweegen/notification/logger"
-	mock_logger "github.com/keweegen/notification/logger/mock"
+	"github.com/keweegen/notification/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestMessage_GenerateID(t *testing.T) {
-	cfg := &config.Config{}
-	l, _ := logger.New()
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
+
+	services := mock(t, mocked)
 
 	userID := int64(1)
 	ts := time.Now().UnixMilli()
@@ -58,15 +53,13 @@ func TestMessage_GenerateID(t *testing.T) {
 }
 
 func TestMessage_ValidateID(t *testing.T) {
-	cfg := &config.Config{}
-	l, _ := logger.New()
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
+
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name               string
@@ -125,7 +118,7 @@ func TestMessage_ValidateID(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.userID != 0 {
-				repoUser.EXPECT().Exists(ctx, tc.userID).Return(!errors.Is(tc.expectedError, InvalidUserErr), tc.expectedQueryError)
+				mocked.RepositoryUser.EXPECT().Exists(ctx, tc.userID).Return(!errors.Is(tc.expectedError, InvalidUserErr), tc.expectedQueryError)
 			}
 
 			err := services.Message.ValidateID(ctx, tc.input)
@@ -140,15 +133,13 @@ func TestMessage_ValidateID(t *testing.T) {
 }
 
 func TestMessage_parseID(t *testing.T) {
-	cfg := &config.Config{}
-	l, _ := logger.New()
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
+
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name     string
@@ -174,7 +165,7 @@ func TestMessage_parseID(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.expected != nil {
-				repoUser.EXPECT().Exists(ctx, tc.expected.UserID).Return(true, nil)
+				mocked.RepositoryUser.EXPECT().Exists(ctx, tc.expected.UserID).Return(true, nil)
 			}
 
 			data, err := services.Message.parseID(ctx, tc.input)
@@ -185,15 +176,13 @@ func TestMessage_parseID(t *testing.T) {
 }
 
 func TestMessage_GetStatus(t *testing.T) {
-	cfg := &config.Config{}
-	l, _ := logger.New()
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
+
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name               string
@@ -241,10 +230,10 @@ func TestMessage_GetStatus(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			repoUser.EXPECT().Exists(ctx, tc.userID).Return(true, tc.expectedIDError)
+			mocked.RepositoryUser.EXPECT().Exists(ctx, tc.userID).Return(true, tc.expectedIDError)
 
 			if tc.expectedIDError == nil {
-				repoMessage.EXPECT().FindLastStatus(ctx, tc.input).Return(tc.expected, tc.expectedQueryError)
+				mocked.RepositoryMessage.EXPECT().FindLastStatus(ctx, tc.input).Return(tc.expected, tc.expectedQueryError)
 			}
 
 			data, err := services.Message.GetStatus(ctx, tc.input)
@@ -260,15 +249,13 @@ func TestMessage_GetStatus(t *testing.T) {
 }
 
 func TestMessage_Send(t *testing.T) {
-	cfg := &config.Config{}
-	l, _ := logger.New()
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
+
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name                        string
@@ -390,48 +377,46 @@ func TestMessage_Send(t *testing.T) {
 				return
 			}
 
-			repoUser.EXPECT().Exists(ctx, tc.userID).Return(true, nil)
+			mocked.RepositoryUser.EXPECT().Exists(ctx, tc.userID).Return(true, nil)
 
 			if tc.expectedErrorOnDuplicate != nil {
-				repoMessage.EXPECT().CheckForDuplicates(ctx, tc.message).Return("", tc.expectedErrorOnDuplicate)
+				mocked.RepositoryMessage.EXPECT().CheckForDuplicates(ctx, tc.message).Return("", tc.expectedErrorOnDuplicate)
 				testErr = tc.expectedErrorOnDuplicate
 				return
 			} else if tc.expectedId != "" && tc.expectedId != tc.input {
-				repoMessage.EXPECT().CheckForDuplicates(ctx, tc.message).Return(tc.expectedId, nil)
+				mocked.RepositoryMessage.EXPECT().CheckForDuplicates(ctx, tc.message).Return(tc.expectedId, nil)
 				return
 			} else {
-				repoMessage.EXPECT().CheckForDuplicates(ctx, tc.message).Return("", sql.ErrNoRows)
+				mocked.RepositoryMessage.EXPECT().CheckForDuplicates(ctx, tc.message).Return("", sql.ErrNoRows)
 				testErr = sql.ErrNoRows
 			}
 
-			repoMessage.EXPECT().Create(ctx, tc.message).Return(tc.expectedErrorOnCreate)
+			mocked.RepositoryMessage.EXPECT().Create(ctx, tc.message).Return(tc.expectedErrorOnCreate)
 			if tc.expectedErrorOnCreate != nil {
 				testErr = tc.expectedErrorOnCreate
 				return
 			}
 
-			repoMessage.EXPECT().CreateStatus(ctx, tc.message.ID, entity.MessageStatusNew, "").Return(tc.expectedErrorOnCreateStatus)
+			mocked.RepositoryMessage.EXPECT().CreateStatus(ctx, tc.message.ID, entity.MessageStatusNew, "").Return(tc.expectedErrorOnCreateStatus)
 			if tc.expectedErrorOnCreateStatus != nil {
 				testErr = tc.expectedErrorOnCreateStatus
 				return
 			}
 
-			repoMessage.EXPECT().Publish(ctx, services.Message.pubSubKey(tc.message.Channel), tc.message.ID).Return(tc.expectedErrorOnPublish)
+			mocked.RepositoryMessage.EXPECT().Publish(ctx, services.Message.pubSubKey(tc.message.Channel), tc.message.ID).Return(tc.expectedErrorOnPublish)
 			testErr = tc.expectedErrorOnPublish
 		})
 	}
 }
 
 func TestMessage_getChannelNameFromPubSubKey(t *testing.T) {
-	cfg := &config.Config{}
-	l, _ := logger.New()
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
+
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name          string
@@ -473,18 +458,13 @@ func TestMessage_getChannelNameFromPubSubKey(t *testing.T) {
 }
 
 func TestMessage_makeStatus(t *testing.T) {
-	cfg := &config.Config{}
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	l := mock_logger.NewMockLogger(controller)
-	l.EXPECT().With("service", "message").Return(l)
-	l.EXPECT().With("service", "messageChecker").Return(l)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name                           string
@@ -511,10 +491,10 @@ func TestMessage_makeStatus(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			repoMessage.EXPECT().CreateStatus(ctx, tc.messageID, tc.status, tc.description).Return(tc.expectedError)
+			mocked.RepositoryMessage.EXPECT().CreateStatus(ctx, tc.messageID, tc.status, tc.description).Return(tc.expectedError)
 
 			if tc.expectedError != nil {
-				l.EXPECT().Error("create message status",
+				mocked.Logger.EXPECT().Error("create message status",
 					"messageId", tc.messageID,
 					"status", tc.status,
 					"description", tc.description,
@@ -527,15 +507,13 @@ func TestMessage_makeStatus(t *testing.T) {
 }
 
 func TestMessage_getContentFromTemplate(t *testing.T) {
-	cfg := &config.Config{}
-	l, _ := logger.New()
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
+
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name            string
@@ -599,18 +577,13 @@ func TestMessage_getContentFromTemplate(t *testing.T) {
 }
 
 func TestMessage_appendQueueChannelMessage(t *testing.T) {
-	cfg := &config.Config{}
-
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	l := mock_logger.NewMockLogger(controller)
-	l.EXPECT().With("service", "message").Return(l)
-	l.EXPECT().With("service", "messageChecker").Return(l)
+	mocked := utils.NewMockedInstances(controller)
+	mocked.ExpectLoggerWithServices()
 
-	repoMessage := mock_repository.NewMockMessage(controller)
-	repoUser := mock_repository.NewMockUser(controller)
-	services := mock(t, cfg, l, repoMessage, repoUser)
+	services := mock(t, mocked)
 
 	cases := []struct {
 		name          string
@@ -639,7 +612,7 @@ func TestMessage_appendQueueChannelMessage(t *testing.T) {
 			ch, _ := services.Message.getChannelNameFromPubSubKey(tc.channel)
 
 			if tc.expectedError != nil {
-				l.EXPECT().Error("get channel from PubSub key", "channel", tc.channel, "error", tc.expectedError)
+				mocked.Logger.EXPECT().Error("get channel from PubSub key", "channel", tc.channel, "error", tc.expectedError)
 			}
 
 			go func() {
@@ -653,29 +626,11 @@ func TestMessage_appendQueueChannelMessage(t *testing.T) {
 	}
 }
 
-func mock(t *testing.T, cfg *config.Config, l logger.Logger, repoMessage repository.Message, repoUser repository.User) *Store {
+func mock(t *testing.T, mocked *utils.MockedInstances) *Store {
 	t.Helper()
 
-	repo := mockRepositoryStore(t, repoMessage, repoUser)
-	channels := mockChannelStore(t, cfg.NotificationChannels)
+	repo := &repository.Store{Message: mocked.RepositoryMessage, User: mocked.RepositoryUser}
+	channels := &channel.Store{Drivers: map[channel.Channel]channel.Driver{channel.Mock: mocked.ChannelDriver}}
 
-	return mockServiceStore(t, l, repo, channels)
-}
-
-func mockServiceStore(t *testing.T, l logger.Logger, repo *repository.Store, channels *channel.Store) *Store {
-	t.Helper()
-	return NewStore(l, repo, channels)
-}
-
-func mockChannelStore(t *testing.T, cfg config.NotificationChannels) *channel.Store {
-	t.Helper()
-	return channel.NewStore(cfg)
-}
-
-func mockRepositoryStore(t *testing.T, message repository.Message, user repository.User) *repository.Store {
-	t.Helper()
-	return &repository.Store{
-		Message: message,
-		User:    user,
-	}
+	return NewStore(mocked.Logger, repo, channels)
 }
