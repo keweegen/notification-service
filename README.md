@@ -16,7 +16,7 @@ make setup
 ```
 
 ## 📄 API Documentation
-[OpenAPI 3.0 - YAML schema](https://github.com/keweegen/notification-service/docs/api.yaml)
+[OpenAPI 3.0 - YAML schema](https://raw.githubusercontent.com/keweegen/notification-service/main/docs/api.yaml)
 
 ## 🪄 Console commands
 Run Docker services (Redis + PostgreSQL)
