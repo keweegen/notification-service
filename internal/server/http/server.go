@@ -32,7 +32,11 @@ func (s *Server) setRoutes(services *service.Store) {
 
 	userGroup := s.base.Group("user")
 	userHandlers := new(userHandler).init(services)
-	userGroup.Patch(":userId/channels", userHandlers.UpdateChannels).Name("CreateOrUpdateChannels user notification channels")
+	userGroup.Get("channel/:userChannelId", userHandlers.ReadChannel).Name("Get user notification channel")
+	userGroup.Get("channel/:userId/all", userHandlers.AllChannelsByUser).Name("Get all notification channels by user id")
+	userGroup.Post("channel", userHandlers.CreateChannel).Name("Create user notification channel")
+	userGroup.Patch("channel/:userChannelId", userHandlers.UpdateChannel).Name("Update user notification channel")
+	userGroup.Delete("channel/:userChannelId", userHandlers.DestroyChannel).Name("Destroy user notification channel")
 }
 
 func (s *Server) Listen(addr string) error {

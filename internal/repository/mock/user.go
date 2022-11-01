@@ -36,18 +36,32 @@ func (m *MockUser) EXPECT() *MockUserMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateChannels mocks base method.
-func (m *MockUser) CreateOrUpdateChannels(ctx context.Context, channels entity.UserChannels) error {
+// CreateChannel mocks base method.
+func (m *MockUser) CreateChannel(ctx context.Context, channel *entity.UserChannel) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateChannels", ctx, channels)
+	ret := m.ctrl.Call(m, "CreateChannel", ctx, channel)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateOrUpdateChannels indicates an expected call of CreateOrUpdateChannels.
-func (mr *MockUserMockRecorder) CreateOrUpdateChannels(ctx, channels interface{}) *gomock.Call {
+// CreateChannel indicates an expected call of CreateChannel.
+func (mr *MockUserMockRecorder) CreateChannel(ctx, channel interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateChannels", reflect.TypeOf((*MockUser)(nil).CreateOrUpdateChannels), ctx, channels)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateChannel", reflect.TypeOf((*MockUser)(nil).CreateChannel), ctx, channel)
+}
+
+// DestroyChannel mocks base method.
+func (m *MockUser) DestroyChannel(ctx context.Context, channelID int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DestroyChannel", ctx, channelID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DestroyChannel indicates an expected call of DestroyChannel.
+func (mr *MockUserMockRecorder) DestroyChannel(ctx, channelID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyChannel", reflect.TypeOf((*MockUser)(nil).DestroyChannel), ctx, channelID)
 }
 
 // Exists mocks base method.
@@ -78,4 +92,48 @@ func (m *MockUser) FindByChannel(ctx context.Context, userID int64, channel chan
 func (mr *MockUserMockRecorder) FindByChannel(ctx, userID, channel interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByChannel", reflect.TypeOf((*MockUser)(nil).FindByChannel), ctx, userID, channel)
+}
+
+// FindChannel mocks base method.
+func (m *MockUser) FindChannel(ctx context.Context, channelID int64) (*entity.UserChannel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindChannel", ctx, channelID)
+	ret0, _ := ret[0].(*entity.UserChannel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindChannel indicates an expected call of FindChannel.
+func (mr *MockUserMockRecorder) FindChannel(ctx, channelID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindChannel", reflect.TypeOf((*MockUser)(nil).FindChannel), ctx, channelID)
+}
+
+// FindChannelsByUser mocks base method.
+func (m *MockUser) FindChannelsByUser(ctx context.Context, userID int64) (entity.UserChannels, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindChannelsByUser", ctx, userID)
+	ret0, _ := ret[0].(entity.UserChannels)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindChannelsByUser indicates an expected call of FindChannelsByUser.
+func (mr *MockUserMockRecorder) FindChannelsByUser(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindChannelsByUser", reflect.TypeOf((*MockUser)(nil).FindChannelsByUser), ctx, userID)
+}
+
+// UpdateChannel mocks base method.
+func (m *MockUser) UpdateChannel(ctx context.Context, channel *entity.UserChannel) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateChannel", ctx, channel)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateChannel indicates an expected call of UpdateChannel.
+func (mr *MockUserMockRecorder) UpdateChannel(ctx, channel interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateChannel", reflect.TypeOf((*MockUser)(nil).UpdateChannel), ctx, channel)
 }

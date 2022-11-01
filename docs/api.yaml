@@ -34,6 +34,15 @@ paths:
       summary: Send message
       parameters:
         - $ref: '#/components/parameters/messageIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Dynamic options depending on the notification template
+              properties:
+                params:
+                  $ref: '#/components/schemas/ReceiptParams'
       responses:
         200:
           description: Message delivered
@@ -52,14 +61,101 @@ paths:
         - $ref: '#/components/parameters/messageIdParam'
       responses:
         200:
-          description: Message delivered
+          description: Successfully response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
+  /user/channel:
+    post:
+      tags:
+        - UserNotificationChannel
+      operationId: createUserChannel
+      summary: Create user channel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserChannelRequest'
+      responses:
+        200:
+          description: Successfully response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatus'
+
+  /user/channel/{userChannelId}:
+    get:
+      tags:
+        - UserNotificationChannel
+      operationId: getUserChannel
+      summary: Get user channel
+      parameters:
+        - $ref: '#/components/parameters/userChannelIdParam'
+      responses:
+        200:
+          description: Successfully response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserChannel'
+    patch:
+      tags:
+        - UserNotificationChannel
+      operationId: updateUserChannel
+      summary: Update user channel
+      parameters:
+        - $ref: '#/components/parameters/userChannelIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserChannelRequest'
+      responses:
+        200:
+          description: Successfully response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatus'
+    delete:
+      tags:
+        - UserNotificationChannel
+      operationId: destroyUserChannel
+      summary: Destroy user channel
+      parameters:
+        - $ref: '#/components/parameters/userChannelIdParam'
+      responses:
+        200:
+          description: Successfully response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatus'
+
+  /user/channel/{userId}/all:
+    get:
+      tags:
+        - UserNotificationChannel
+      operationId: getAllUserChannels
+      summary: Get all user channels
+      parameters:
+        - $ref: '#/components/parameters/userIdParam'
+      responses:
+        200:
+          description: Successfully response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserChannel'
+
 tags:
   - name: Message
+  - name: UserNotificationChannel
 
 components:
   parameters:
@@ -71,6 +167,22 @@ components:
         type: string
         format: "NS-{channelId}-{messageTemplateId}-{userId}-{timestamp}-{externalId}"
         example: "NS-002-001-1234567890-1666030721-1234567890"
+    userIdParam:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        example: 1234567890
+    userChannelIdParam:
+      name: userChannelId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        example: 1234567890
 
   schemas:
     GenerateMessageIdRequest:
@@ -134,4 +246,89 @@ components:
         statusTime:
           type: string
           format: datetime
+          required: true
+    UserChannel:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 123
+        userId:
+          type: integer
+          format: int64
+          example: 1234567890
+          required: true
+        channel:
+          type: string
+          example: telegram
+          required: true
+        recipient:
+          type: string
+          example: 408354752
+          required: true
+        canNotify:
+          type: boolean
+          example: true
+          default: false
+          required: true
+    CreateUserChannelRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1234567890
+          required: true
+        channel:
+          type: string
+          example: telegram
+          required: true
+        recipient:
+          type: string
+          example: 408354752
+          required: true
+        canNotify:
+          type: boolean
+          example: true
+          default: false
+          required: true
+    UpdateUserChannelRequest:
+      type: object
+      properties:
+        recipient:
+          type: string
+          example: 408354752
+          required: true
+        canNotify:
+          type: boolean
+          example: true
+          default: false
+          required: true
+    OperationStatus:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+          required: true
+        statusDescription:
+          type: string
+          example: "OK"
+          required: true
+    ReceiptParams:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+          example: "123"
+          required: true
+        commissionAmount:
+          type: string
+          example: "300,00 KZT"
+          required: true
+        totalAmount:
+          type: string
+          example: "1300,00 KZT"
           required: true

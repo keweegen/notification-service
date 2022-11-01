@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/keweegen/notification/internal/channel"
 	mockChannel "github.com/keweegen/notification/internal/channel/mock"
@@ -10,6 +11,8 @@ import (
 	mockLogger "github.com/keweegen/notification/logger/mock"
 	"time"
 )
+
+var FakeDatabaseError = errors.New("database error :(")
 
 type MockedInstances struct {
 	QuitCh            chan struct{}
@@ -35,7 +38,7 @@ func (m *MockedInstances) ExpectLoggerWithServices() {
 }
 
 func (m *MockedInstances) WriteQuitChannel() {
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	m.QuitCh <- struct{}{}
 }
 
