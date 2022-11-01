@@ -3,6 +3,21 @@
 This is <strong>not the final example</strong> of a notification service implementation. At the moment, sending messages to Telegram, E-mail is supported. There is support for message templates for different sending channels.
 </p>
 
+<p align="center">
+  <a href="https://goreportcard.com/report/github.com/keweegen/notification-service">
+    <img src="https://img.shields.io/badge/%F0%9F%93%9D%20goreport-A%2B-75C46B?style=flat-square">
+  </a>
+  <a href="https://gocover.io/github.com/keweegen/notification-service">
+    <img src="https://img.shields.io/badge/%F0%9F%94%8E%20gocover-97.8%25-75C46B.svg?style=flat-square">
+  </a>
+  <a href="https://github.com/keweegen/notification-service/actions?query=workflow%3ASecurity">
+    <img src="https://img.shields.io/github/workflow/status/keweegen/notification-service/Security?label=%F0%9F%94%91%20gosec&style=flat-square&color=75C46B">
+  </a>
+  <a href="https://github.com/keweegen/notification-service/actions?query=workflow%3ATest">
+    <img src="https://img.shields.io/github/workflow/status/keweegen/notification-service/Test?label=%F0%9F%A7%AA%20tests&style=flat-square&color=75C46B">
+  </a>
+</p>
+
 ----
 
 ## ✨ Setup
