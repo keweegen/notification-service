@@ -45,6 +45,5 @@ make coverage
 ```
 
 ## ⭐ TODO
-- [ ] Add API endpoints to create/update user info
+- [ ] Add validation requests
 - [ ] Add [Jaeger](https://www.jaegertracing.io/)
-- [x] Handling unsuccessfully sent messages
