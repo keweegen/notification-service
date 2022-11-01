@@ -30,3 +30,4 @@ vendor
 /Godeps/
 
 config.yml
+coverage.html

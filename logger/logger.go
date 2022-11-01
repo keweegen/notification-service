@@ -2,6 +2,7 @@ package logger
 
 import "go.uber.org/zap"
 
+//go:generate mockgen -source=logger.go -destination=./mock/logger.go
 type Logger interface {
 	With(args ...any) Logger
 	Debug(msg string, args ...any)
@@ -14,7 +15,7 @@ type logger struct {
 }
 
 func New() (Logger, error) {
-	l, err := zap.NewProduction()
+	l, err := zap.NewDevelopment()
 	if err != nil {
 		return nil, err
 	}
@@ -29,11 +30,11 @@ func (l *logger) With(args ...any) Logger {
 }
 
 func (l *logger) Debug(msg string, args ...any) {
-	l.base.Debugw(msg, args)
+	l.base.Debugw(msg, args...)
 }
 
 func (l *logger) Info(msg string, args ...any) {
-	l.base.Infow(msg, args)
+	l.base.Infow(msg, args...)
 }
 
 func (l *logger) Error(msg string, args ...any) {

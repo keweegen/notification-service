@@ -32,17 +32,10 @@ coverage:
 	go tool cover -html=coverage.out -o coverage.html
 	rm -rf coverage.out
 
-gen-models:
-	sqlboiler psql
-
-gen-mock:
-	mockgen -source=internal/messagetemplate/template.go -destination=internal/messagetemplate/mock/template.go
-	mockgen -source=internal/channel/driver.go -destination=internal/channel/mock/driver.go
-	mockgen -source=internal/repository/message.go -destination=internal/repository/mock/message.go
-	mockgen -source=internal/repository/user.go -destination=internal/repository/mock/user.go
-	mockgen -source=logger/logger.go -destination=logger/mock/logger.go
+generate:
+	go generate ./...
 
 install-binaries:
-	# https://github.com/volatiletech/sqlboiler
+	# See: https://github.com/volatiletech/sqlboiler
 	go install github.com/volatiletech/sqlboiler/v4@latest
 	go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql@latest

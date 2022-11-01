@@ -10,11 +10,12 @@ func _() {
 	var x [1]struct{}
 	_ = x[Telegram-1]
 	_ = x[Email-2]
+	_ = x[Mock-3]
 }
 
-const _Channel_name = "TelegramEmail"
+const _Channel_name = "TelegramEmailMock"
 
-var _Channel_index = [...]uint8{0, 8, 13}
+var _Channel_index = [...]uint8{0, 8, 13, 17}
 
 func (i Channel) String() string {
 	i -= 1

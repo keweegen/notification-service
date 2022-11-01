@@ -27,6 +27,7 @@ type MessageStatus struct {
 	MessageID   string    `boil:"message_id" json:"message_id" toml:"message_id" yaml:"message_id"`
 	Status      string    `boil:"status" json:"status" toml:"status" yaml:"status"`
 	Description string    `boil:"description" json:"description" toml:"description" yaml:"description"`
+	IsLast      bool      `boil:"is_last" json:"is_last" toml:"is_last" yaml:"is_last"`
 	CreatedAt   time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
 	R *messageStatusR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -38,12 +39,14 @@ var MessageStatusColumns = struct {
 	MessageID   string
 	Status      string
 	Description string
+	IsLast      string
 	CreatedAt   string
 }{
 	ID:          "id",
 	MessageID:   "message_id",
 	Status:      "status",
 	Description: "description",
+	IsLast:      "is_last",
 	CreatedAt:   "created_at",
 }
 
@@ -52,28 +55,41 @@ var MessageStatusTableColumns = struct {
 	MessageID   string
 	Status      string
 	Description string
+	IsLast      string
 	CreatedAt   string
 }{
 	ID:          "message_status.id",
 	MessageID:   "message_status.message_id",
 	Status:      "message_status.status",
 	Description: "message_status.description",
+	IsLast:      "message_status.is_last",
 	CreatedAt:   "message_status.created_at",
 }
 
 // Generated where
+
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 var MessageStatusWhere = struct {
 	ID          whereHelperint64
 	MessageID   whereHelperstring
 	Status      whereHelperstring
 	Description whereHelperstring
+	IsLast      whereHelperbool
 	CreatedAt   whereHelpertime_Time
 }{
 	ID:          whereHelperint64{field: "\"message_status\".\"id\""},
 	MessageID:   whereHelperstring{field: "\"message_status\".\"message_id\""},
 	Status:      whereHelperstring{field: "\"message_status\".\"status\""},
 	Description: whereHelperstring{field: "\"message_status\".\"description\""},
+	IsLast:      whereHelperbool{field: "\"message_status\".\"is_last\""},
 	CreatedAt:   whereHelpertime_Time{field: "\"message_status\".\"created_at\""},
 }
 
@@ -105,9 +121,9 @@ func (r *messageStatusR) GetMessage() *Message {
 type messageStatusL struct{}
 
 var (
-	messageStatusAllColumns            = []string{"id", "message_id", "status", "description", "created_at"}
+	messageStatusAllColumns            = []string{"id", "message_id", "status", "description", "is_last", "created_at"}
 	messageStatusColumnsWithoutDefault = []string{"message_id", "status", "description"}
-	messageStatusColumnsWithDefault    = []string{"id", "created_at"}
+	messageStatusColumnsWithDefault    = []string{"id", "is_last", "created_at"}
 	messageStatusPrimaryKeyColumns     = []string{"id"}
 	messageStatusGeneratedColumns      = []string{}
 )
