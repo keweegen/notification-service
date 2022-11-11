@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/keweegen/notification/internal/app"
 	"github.com/keweegen/notification/internal/channel"
@@ -22,36 +21,30 @@ func init() {
 var httpServerCommand = &cobra.Command{
 	Use: "http",
 	RunE: func(_ *cobra.Command, _ []string) error {
-		ctx := context.Background()
 		s := shutdown.New(l)
-		s.Listen()
-
-		quit := make(chan struct{})
-		s.AddHandler("quit handle messages", func() error {
-			quit <- struct{}{}
-			return nil
-		})
+		defer s.ListenContextDone()
 
 		app := app.New(cfg, l)
+
 		if err := app.Connect(); err != nil {
 			return fmt.Errorf("app connect: %w", err)
 		}
-		s.AddHandler("close app connections", app.Close)
+		s.AddHandler("app", app.Close)
 
 		repositoryStore := repository.NewStore(app.CurrentDatabase(), app.CurrentMessageBroker())
 		channelStore := channel.NewStore(cfg.NotificationChannels)
 		serviceStore := service.NewStore(l, repositoryStore, channelStore)
 
-		go serviceStore.Message.HandleMessages(ctx, quit)
-		go serviceStore.MessageChecker.Do(ctx, quit)
-
 		httpServer := http.NewServer(serviceStore)
-		s.AddHandler("close http server connection", httpServer.Close)
+		s.AddHandler("httpServer", httpServer.Close)
 
-		if err := httpServer.Listen(httpAddr); err != nil {
-			return err
-		}
-		s.ReadCh()
+		go serviceStore.Message.HandleMessages(s.Context())
+		go serviceStore.MessageChecker.Do(s.Context())
+		go func() {
+			if err := httpServer.Listen(httpAddr); err != nil {
+				l.Error("failed to listen http server", "error", err)
+			}
+		}()
 
 		return nil
 	},

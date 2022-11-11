@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/keweegen/notification/internal/channel"
@@ -15,20 +16,25 @@ import (
 var FakeDatabaseError = errors.New("database error :(")
 
 type MockedInstances struct {
-	QuitCh            chan struct{}
+	Context           context.Context
 	Logger            *mockLogger.MockLogger
 	ChannelDriver     *mockChannel.MockDriver
 	RepositoryMessage *mockRepository.MockMessage
 	RepositoryUser    *mockRepository.MockUser
+
+	ctxCancel context.CancelFunc
 }
 
 func NewMockedInstances(controller *gomock.Controller) *MockedInstances {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return &MockedInstances{
 		Logger:            mockLogger.NewMockLogger(controller),
 		ChannelDriver:     mockChannel.NewMockDriver(controller),
 		RepositoryMessage: mockRepository.NewMockMessage(controller),
 		RepositoryUser:    mockRepository.NewMockUser(controller),
-		QuitCh:            make(chan struct{}),
+		Context:           ctx,
+		ctxCancel:         cancel,
 	}
 }
 
@@ -37,9 +43,9 @@ func (m *MockedInstances) ExpectLoggerWithServices() {
 	m.Logger.EXPECT().With("service", "messageChecker").Return(m.Logger)
 }
 
-func (m *MockedInstances) WriteQuitChannel() {
+func (m *MockedInstances) ContextCancel() {
+	m.ctxCancel()
 	time.Sleep(10 * time.Millisecond)
-	m.QuitCh <- struct{}{}
 }
 
 func (m *MockedInstances) FakeUserChannel() *entity.UserChannel {

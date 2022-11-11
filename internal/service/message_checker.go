@@ -27,12 +27,13 @@ func NewMessageChecker(logger logger.Logger, repo *repository.Store, messageServ
 	}
 }
 
-func (mc *MessageChecker) Do(ctx context.Context, quit <-chan struct{}) {
+func (mc *MessageChecker) Do(ctx context.Context) {
 	mc.check(ctx)
 
 	for {
 		select {
-		case <-quit:
+		case <-ctx.Done():
+			mc.logger.Debug("Do: context done")
 			return
 		case <-time.After(retryTimeoutChecker):
 			mc.check(ctx)
