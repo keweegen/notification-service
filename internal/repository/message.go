@@ -184,16 +184,6 @@ func (r *messageRepository) sqlboilerToEntityMessages(data models.MessageSlice) 
 	return messages
 }
 
-func (r *messageRepository) entityMessageStatusToSqlboiler(data *entity.MessageStatus) *models.MessageStatus {
-	return &models.MessageStatus{
-		ID:          data.ID,
-		MessageID:   data.MessageID,
-		Status:      data.Status,
-		Description: data.Description,
-		CreatedAt:   data.CreatedAt,
-	}
-}
-
 func (r *messageRepository) sqlboilerToEntityMessageStatus(data *models.MessageStatus) *entity.MessageStatus {
 	return &entity.MessageStatus{
 		ID:          data.ID,

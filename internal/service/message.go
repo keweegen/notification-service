@@ -168,31 +168,30 @@ func (m *Message) Send(ctx context.Context, id string, params types.JSON) (strin
 	return message.ID, m.repoStore.Message.Publish(ctx, m.pubSubKey(message.Channel), message.ID)
 }
 
-func (m *Message) HandleMessages(ctx context.Context, quit <-chan struct{}) {
+func (m *Message) HandleMessages(ctx context.Context) {
 	subscriptionKeys := make([]string, 0, len(channel.Channels))
 
 	for _, ch := range channel.Channels {
 		subscriptionKeys = append(subscriptionKeys, m.pubSubKey(ch))
 
-		go m.handleChannelMessages(ctx, quit, ch)
+		go m.handleChannelMessages(ctx, ch)
 	}
 
 	subscription := m.repoStore.Message.Subscribe(ctx, subscriptionKeys...)
 
-	go func() {
-		for {
-			select {
-			case <-quit:
-				m.onCloseSubscriptionReceive(subscription)
-				return
-			default:
-				m.receiveFromSubscription(ctx, subscription)
-			}
+	for {
+		select {
+		case <-ctx.Done():
+			m.logger.Debug("HandleMessages: context done")
+			m.closeSubscriptionReceive(subscription)
+			return
+		default:
+			m.receiveFromSubscription(ctx, subscription)
 		}
-	}()
+	}
 }
 
-func (m *Message) onCloseSubscriptionReceive(subscription *repository.MessageSubscription) {
+func (m *Message) closeSubscriptionReceive(subscription *repository.MessageSubscription) {
 	if err := subscription.Close(); err != nil {
 		m.logger.Error("failed close subscription message broker connection",
 			"error", err)
@@ -249,13 +248,13 @@ func (m *Message) padRightSide(n int64) string {
 	return num + strings.Repeat("0", repeatCount)
 }
 
-func (m *Message) handleChannelMessages(ctx context.Context, quit <-chan struct{}, channel channel.Channel) {
+func (m *Message) handleChannelMessages(ctx context.Context, channel channel.Channel) {
 	for {
 		select {
-		case <-quit:
+		case <-ctx.Done():
+			m.logger.Debug("handleChannelMessages: context done", "channel", channel.String())
 			return
-		default:
-			messageID := <-m.chQueueChannels[channel]
+		case messageID := <-m.chQueueChannels[channel]:
 			l := m.logger.With("messageId", messageID, "channel", channel)
 
 			message, err := m.repoStore.Message.Find(ctx, messageID)
